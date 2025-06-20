@@ -1,382 +1,4 @@
 {
-  "superusers": {
-    "description": "额外超级管理员列表",
-    "type": "list",
-    "hint": "已自动添加astrbot的管理员到本插件的超级管理员列表，此处另外提供提供单独设置的额外超级管理员列表，都拥有最高权限",
-    "default": [
-      "2936169201"
-    ]
-  },
-  "perm_setting": {
-    "description": "命令权限设置",
-    "type": "object",
-    "hint": "设置各个命令的使用权限",
-    "items": {
-      "set_ban_perm": {
-        "description": "禁言",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "管理员"
-      },
-      "set_ban_me_perm": {
-        "description": "禁我",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "成员"
-      },
-      "cancel_ban_perm": {
-        "description": "解禁",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "管理员"
-      },
-      "set_whole_ban_perm": {
-        "description": "全体禁言",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "管理员"
-      },
-      "cancel_whole_ban_perm": {
-        "description": "解除全体禁言",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "管理员"
-      },
-      "set_card_perm": {
-        "description": "改名",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "管理员"
-      },
-      "set_card_me_perm": {
-        "description": "改我",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "成员"
-      },
-      "set_title_perm": {
-        "description": "头衔",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "管理员"
-      },
-      "set_title_me_perm": {
-        "description": "我要头衔",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "成员"
-      },
-      "group_kick_perm": {
-        "description": "踢了",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "管理员"
-      },
-      "group_block_perm": {
-        "description": "拉黑",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "管理员"
-      },
-      "set_admin_perm": {
-        "description": "设置管理员",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "群主"
-      },
-      "cancel_admin_perm": {
-        "description": "取消管理员",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "群主"
-      },
-      "set_essence_perm": {
-        "description": "设精",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "成员"
-      },
-      "cancel_essence_perm": {
-        "description": "取精",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "成员"
-      },
-      "get_essence_msg_list_perm": {
-        "description": "群精华",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "成员"
-      },
-      "delete_msg_perm": {
-        "description": "撤回",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "成员"
-      },
-      "set_group_portrait_perm": {
-        "description": "设置群头像",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "管理员"
-      },
-      "set_group_name_perm": {
-        "description": "设置群名",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "管理员"
-      },
-      "get_group_member_list_perm": {
-        "description": "群友信息",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "成员"
-      },
-      "clear_group_member_perm": {
-        "description": "清理群友",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "管理员"
-      },
-      "send_group_notice_perm": {
-        "description": "发布群公告",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "管理员"
-      },
-      "get_group_notice_perm": {
-        "description": "群公告",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "成员"
-      },
-      "start_scheduler_loop_perm": {
-        "description": "开启宵禁",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "管理员"
-      },
-      "stop_scheduler_loop_perm": {
-        "description": "关闭宵禁",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "管理员"
-      },
-      "add_accept_keyword_perm": {
-        "description": "添加进群关键词",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "管理员"
-      },
-      "remove_accept_keyword_perm": {
-        "description": "删除进群关键词",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "管理员"
-      },
-      "view_accept_keywords_perm": {
-        "description": "查看进群关键词",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "成员"
-      },
-      "add_reject_ids_perm": {
-        "description": "添加进群黑名单",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "管理员"
-      },
-      "remove_reject_ids_perm": {
-        "description": "删除进群黑名单",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "管理员"
-      },
-      "view_reject_ids_perm": {
-        "description": "查看进群黑名单",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "成员"
-      },
-      "agree_add_group_perm": {
-        "description": "同意",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "管理员"
-      },
-      "refuse_add_group_perm": {
-        "description": "拒绝",
-        "type": "string",
-        "options": [
-          "超管",
-          "群主",
-          "管理员",
-          "成员"
-        ],
-        "default": "管理员"
-      }
-    }
-  },
   "accept_keywords_list": {
     "description": "进群关键词数据",
     "type": "list",
@@ -442,17 +64,14 @@
     "items": {
       "forbidden_words": {
         "description": "违禁词",
-        "type": "list",
-        "hint": "包含关键词的消息将被撤回，并禁言发送者",
-        "default": [
-          "傻逼",
-          "傻屌"
-        ]
+        "type": "text",
+        "hint": "包含关键词的消息将被撤回，并禁言发送者，违禁词之间用中文逗号隔开",
+        "default": "傻逼，傻屌"
       },
       "forbidden_words_group": {
         "description": "检测违禁词的群聊白名单",
         "type": "list",
-        "hint": "仅检测白名单的群聊，其他群聊不检测",
+        "hint": "仅检测白名单的群聊，留空表示检测所有群聊",
         "default": []
       },
       "forbidden_words_ban_time": {
@@ -460,6 +79,376 @@
         "type": "int",
         "hint": "触发违禁词是禁言发送者，单位：秒，设置为0表示不禁言",
         "default": 60
+      }
+    }
+  },
+  "perms": {
+    "description": "命令权限设置",
+    "type": "object",
+    "hint": "设置各个命令的使用权限",
+    "items": {
+      "set_group_ban": {
+        "description": "禁言",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "管理员"
+      },
+      "set_group_ban_me": {
+        "description": "禁我",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "成员"
+      },
+      "cancel_group_ban": {
+        "description": "解禁",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "管理员"
+      },
+      "set_group_whole_ban": {
+        "description": "全体禁言",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "管理员"
+      },
+      "cancel_group_whole_ban": {
+        "description": "解除全体禁言",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "管理员"
+      },
+      "set_group_card": {
+        "description": "改名",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "管理员"
+      },
+      "set_group_card_me": {
+        "description": "改我",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "成员"
+      },
+      "set_group_special_title": {
+        "description": "头衔",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "管理员"
+      },
+      "set_group_special_title_me": {
+        "description": "我要头衔",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "成员"
+      },
+      "set_group_kick": {
+        "description": "踢了",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "管理员"
+      },
+      "set_group_block": {
+        "description": "拉黑",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "管理员"
+      },
+      "set_group_admin": {
+        "description": "设置管理员",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "群主"
+      },
+      "cancel_group_admin": {
+        "description": "取消管理员",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "群主"
+      },
+      "set_essence_msg": {
+        "description": "设精",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "成员"
+      },
+      "delete_essence_msg": {
+        "description": "取精",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "成员"
+      },
+      "get_essence_msg_list": {
+        "description": "群精华",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "成员"
+      },
+      "delete_msg": {
+        "description": "撤回",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "成员"
+      },
+      "set_group_portrait": {
+        "description": "设置群头像",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "管理员"
+      },
+      "set_group_name": {
+        "description": "设置群名",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "管理员"
+      },
+      "get_group_member_list": {
+        "description": "群友信息",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "成员"
+      },
+      "clear_group_member": {
+        "description": "清理群友",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "管理员"
+      },
+      "send_group_notice": {
+        "description": "发布群公告",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "管理员"
+      },
+      "get_group_notice": {
+        "description": "群公告",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "成员"
+      },
+      "start_curfew": {
+        "description": "开启宵禁",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "管理员"
+      },
+      "stop_curfew": {
+        "description": "关闭宵禁",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "管理员"
+      },
+      "add_accept_keyword": {
+        "description": "添加进群关键词",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "管理员"
+      },
+      "remove_accept_keyword": {
+        "description": "删除进群关键词",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "管理员"
+      },
+      "view_accept_keywords": {
+        "description": "查看进群关键词",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "成员"
+      },
+      "add_reject_ids": {
+        "description": "添加进群黑名单",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "管理员"
+      },
+      "remove_reject_ids": {
+        "description": "删除进群黑名单",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "管理员"
+      },
+      "view_reject_ids": {
+        "description": "查看进群黑名单",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "成员"
+      },
+      "agree_add_group": {
+        "description": "同意",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "管理员"
+      },
+      "refuse_add_group": {
+        "description": "拒绝",
+        "type": "string",
+        "options": [
+          "超管",
+          "群主",
+          "管理员",
+          "成员"
+        ],
+        "default": "管理员"
       }
     }
   }
