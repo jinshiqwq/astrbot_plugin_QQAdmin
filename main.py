@@ -110,7 +110,7 @@ class AdminPlugin(Star):
                 duration=ban_time,
             )
             yield event.plain_result(random.choice(BAN_ME_QUOTES))
-        except:  # noqa: E722
+        except Exception:
             yield event.plain_result("我可禁言不了你")
         event.stop_event()
 
@@ -629,7 +629,7 @@ class AdminPlugin(Star):
                         f"\n理由：{extra}" if extra else ""
                     )
                 return reply
-            except:  # noqa: E722
+            except Exception:
                 return "这条申请处理过了或者格式不对"
 
     @filter.command("群友信息")

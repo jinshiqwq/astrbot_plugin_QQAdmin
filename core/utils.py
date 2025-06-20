@@ -84,8 +84,7 @@ async def get_nickname(event: AiocqhttpMessageEvent, user_id) -> str:
     all_info = await client.get_group_member_info(
         group_id=int(group_id), user_id=int(user_id)
     )
-    nickname = all_info.get("card") or all_info.get("nickname")
-    return nickname
+    return all_info.get("card") or all_info.get("nickname")
 
 
 def get_ats(event: AiocqhttpMessageEvent) -> list[str]:
@@ -159,7 +158,7 @@ def filter_inactive_members(
     for member in members_data:
         last_sent = member.get("last_sent_time", 0)
         level = int(member.get("level", 0))
-        user_id = member["user_id"]
+        user_id = member.get("user_id", "")
         nickname = member.get("nickname", "（无昵称）")
 
         if last_sent < threshold_ts and level < under_level:

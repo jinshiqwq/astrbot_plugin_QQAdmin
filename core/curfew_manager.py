@@ -101,19 +101,18 @@ class CurfewManager:
                         logger.error(
                             f"群 {self.group_id} 宵禁开启失败: {e}", exc_info=True
                         )
-            else:
-                if self.whole_ban_status:
-                    try:
-                        await self.bot.send_group_msg(
-                            group_id=int(self.group_id),
-                            message=f"【{self.end_time.strftime('%H:%M')}】本群宵禁结束！",
-                        )
-                        await self.bot.set_group_whole_ban(
-                            group_id=int(self.group_id), enable=False
-                        )
-                        self.whole_ban_status = False
-                        logger.info(f"群 {self.group_id} 已解除全体禁言。")
-                    except Exception as e:
-                        logger.error(
-                            f"群 {self.group_id} 宵禁解除失败: {e}", exc_info=True
-                        )
+            elif self.whole_ban_status:
+                try:
+                    await self.bot.send_group_msg(
+                        group_id=int(self.group_id),
+                        message=f"【{self.end_time.strftime('%H:%M')}】本群宵禁结束！",
+                    )
+                    await self.bot.set_group_whole_ban(
+                        group_id=int(self.group_id), enable=False
+                    )
+                    self.whole_ban_status = False
+                    logger.info(f"群 {self.group_id} 已解除全体禁言。")
+                except Exception as e:
+                    logger.error(
+                        f"群 {self.group_id} 宵禁解除失败: {e}", exc_info=True
+                    )
