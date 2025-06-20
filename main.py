@@ -29,7 +29,7 @@ from .core.utils import *
 @register(
     "astrbot_plugin_QQAdmin",
     "Zhalslar",
-    "帮助你管理群聊",
+    "群管插件，帮助你管理群聊",
     "3.0.0",
     "https://github.com/Zhalslar/astrbot_plugin_QQAdmin",
 )
@@ -294,7 +294,7 @@ class AdminPlugin(Star):
         if isinstance(first_seg, Comp.Reply):
             try:
                 await event.bot.delete_msg(message_id=int(first_seg.id))
-            except:  # noqa: E722
+            except Exception:
                 yield event.plain_result("我无权撤回这条消息")
             finally:
                 event.stop_event()
@@ -320,7 +320,7 @@ class AdminPlugin(Star):
                 try:
                     message_id = event.message_obj.message_id
                     await event.bot.delete_msg(message_id=int(message_id))
-                except:  # noqa: E722
+                except Exception:
                     pass
                 # 禁言发送者
                 if self.forbidden_words_ban_time > 0:
@@ -330,7 +330,7 @@ class AdminPlugin(Star):
                             user_id=int(event.get_sender_id()),
                             duration=self.forbidden_words_ban_time,
                         )
-                    except:  # noqa: E722
+                    except Exception:
                         pass
                 break
 
@@ -338,9 +338,13 @@ class AdminPlugin(Star):
     @perm_required(PermLevel.ADMIN)
     async def set_group_portrait(self, event: AiocqhttpMessageEvent):
         """(引用图片)设置群头像"""
+        image_url = extract_image_url(chain=event.get_messages())
+        if not image_url:
+            yield event.plain_result("未获取到新头像")
+            return
         await event.bot.set_group_portrait(
             group_id=int(event.get_group_id()),
-            file=extract_image_url(chain=event.get_messages()),
+            file=image_url,
         )
         yield event.plain_result("群头像更新啦>v<")
 
@@ -366,8 +370,7 @@ class AdminPlugin(Star):
         if not content:
             yield event.plain_result("你又不说要发什么群公告")
             return
-        image_url = extract_image_url(chain=event.get_messages())
-        if image_url:
+        if image_url := extract_image_url(chain=event.get_messages()):
             temp_path = os.path.join(
                 self.plugin_data_dir,
                 "group_notice_image",
@@ -474,19 +477,21 @@ class AdminPlugin(Star):
     @perm_required(PermLevel.ADMIN)
     async def add_accept_keyword(self, event: AiocqhttpMessageEvent):
         """添加自动批准进群的关键词"""
-        keywords = event.message_str.removeprefix("添加进群关键词").strip().split()
-        if keywords:
+        if keywords := event.message_str.removeprefix("添加进群关键词").strip().split():
             self.group_join_manager.add_keyword(event.get_group_id(), keywords)
             yield event.plain_result(f"新增进群关键词：{keywords}")
+        else:
+            yield event.plain_result("未输入任何关键词")
 
     @filter.command("删除进群关键词")
     @perm_required(PermLevel.ADMIN)
     async def remove_accept_keyword(self, event: AiocqhttpMessageEvent):
         """删除自动批准进群的关键词"""
-        keywords = event.message_str.removeprefix("删除进群关键词").strip().split()
-        if keywords:
+        if keywords := event.message_str.removeprefix("删除进群关键词").strip().split():
             self.group_join_manager.remove_keyword(event.get_group_id(), keywords)
             yield event.plain_result(f"已删进群关键词：{keywords}")
+        else:
+            yield event.plain_result("未指定要删除的关键词")
 
     @filter.command("查看进群关键词")
     @perm_required(PermLevel.ADMIN)
@@ -606,7 +611,9 @@ class AdminPlugin(Star):
         event: AiocqhttpMessageEvent, extra: str = "", approve: bool = True
     ) -> str | None:
         """处理进群申请"""
-        text = get_reply_message_str(event) or ""
+        text = get_reply_message_str(event)
+        if not text:
+            return "未引用任何【进群申请】"
         lines = text.split("\n")
         if "【收到进群申请】" in text and len(lines) >= 5:
             nickname = lines[1].split("：")[1]  # 第2行冒号后文本为nickname

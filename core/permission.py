@@ -118,7 +118,8 @@ class PermissionManager:
 
         required_level = self.perms.get(perm_key)
         if required_level is None:
-            return f"未配置权限项：{perm_key}"
+            logger.error(f"未配置权限项: {perm_key}")
+            return "无法执行未知权限的操作"
 
         if user_level > required_level:
             return f"你没{required_level}权限"
@@ -169,7 +170,7 @@ def perm_required(
             # 权限管理未初始化
             if not perm_manager._initialized:
                 logger.error(f"PermissionManager 未初始化（尝试访问权限项：{perm_key}）")
-                yield event.plain_result("内部错误：权限系统未正确加载。")
+                yield event.plain_result("内部错误：权限系统未正确加载")
                 event.stop_event()
                 return
 
