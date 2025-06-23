@@ -30,7 +30,7 @@ from .core.utils import *
     "astrbot_plugin_QQAdmin",
     "Zhalslar",
     "群管插件，帮助你管理群聊",
-    "3.0.0",
+    "3.0.1",
     "https://github.com/Zhalslar/astrbot_plugin_QQAdmin",
 )
 class AdminPlugin(Star):
@@ -310,7 +310,7 @@ class AdminPlugin(Star):
             and event.get_group_id() not in self.forbidden_words_group
         ):
             return
-        if not self.forbidden_words:
+        if not self.forbidden_words or not event.message_str:
             return
         # 检测违禁词
         for word in self.forbidden_words:
