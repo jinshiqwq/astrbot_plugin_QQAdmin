@@ -147,23 +147,3 @@ def extract_image_url(chain: list[BaseMessageComponent]) -> str | None:
                     return reply_seg.url
     return None
 
-
-def filter_inactive_members(
-    members_data: list[dict], threshold_ts: int, under_level: int
-) -> Tuple[list[int], list[str]]:
-    """筛选不活跃且等级低的成员"""
-    clear_ids = []
-    clear_info = []
-
-    for member in members_data:
-        last_sent = member.get("last_sent_time", 0)
-        level = int(member.get("level", 0))
-        user_id = member.get("user_id", "")
-        nickname = member.get("nickname", "（无昵称）")
-
-        if last_sent < threshold_ts and level < under_level:
-            clear_ids.append(user_id)
-            last_active_str = format_time(last_sent)
-            clear_info.append(f"{last_active_str}：【{level}】{user_id}-{nickname}")
-
-    return clear_ids, clear_info

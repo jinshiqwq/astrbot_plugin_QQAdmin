@@ -657,7 +657,7 @@ class AdminPlugin(Star):
         yield event.image_result(url)
 
     @filter.command("清理群友")
-    @perm_required(PermLevel.ADMIN)
+    @perm_required(PermLevel.MEMBER)
     async def clear_group_member(
         self,
         event: AiocqhttpMessageEvent,
@@ -676,28 +676,42 @@ class AdminPlugin(Star):
             return
 
         threshold_ts = int(datetime.now().timestamp()) - inactive_days * 86400
+        clear_ids: list[int] = []
+        info_lines: list[str] = []
 
-        clear_ids, clear_info = filter_inactive_members(
-            members_data,  # type: ignore
-            threshold_ts,
-            under_level,
-        )
+        for member in members_data:  # type: ignore
+            last_sent = member.get("last_sent_time", 0)
+            level = int(member.get("level", 0))
+            user_id = member.get("user_id", "")
+            nickname = member.get("nickname", "（无昵称）")
+
+            if last_sent < threshold_ts and level < under_level:
+                clear_ids.append(user_id)
+                last_active_str = format_time(last_sent)
+                info_lines.append(
+                    f"- **{last_active_str}**｜**{level}**级｜`{user_id}` - {nickname}"
+                )
 
         if not clear_ids:
             yield event.plain_result("无符合条件的群友")
             return
 
-        # 排序 + 生成图像
-        clear_info.sort(key=lambda x: datetime.strptime(x.split("：")[0], "%Y-%m-%d"))
+        # 按发言时间排序
+        info_lines.sort(key=lambda x: datetime.strptime(x.split("**")[1], "%Y-%m-%d"))
+
         info_str = (
-            f"以下群友{inactive_days}天内未发言，且等级低于{under_level}:\n\n"
-            + "\n\n".join(clear_info)
-            + "\n\n请发送 “确认清理” 或 “取消清理” 进行操作。"
+            f"### 共 **{len(clear_ids)}** 位群友 **{inactive_days}** 天内无发言，群等级低于 **{under_level}** 级\n\n"
+            + "\n".join(info_lines)
+            + "\n\n### 请发送 **确认清理** 或 **取消清理** 来处理这些群友！"
         )
+
         url = await self.text_to_image(info_str)
         yield event.image_result(url)
 
-        @session_waiter(timeout=30)  # type: ignore
+        yield event.chain_result([At(qq=cid) for cid in clear_ids])
+
+
+        @session_waiter(timeout=60)  # type: ignore
         async def empty_mention_waiter(
             controller: SessionController, event: AiocqhttpMessageEvent
         ):
@@ -710,6 +724,7 @@ class AdminPlugin(Star):
                 return
 
             if event.message_str == "确认清理":
+                msg_list = []
                 for clear_id in clear_ids:
                     try:
                         target_name = await get_nickname(event, user_id=clear_id)
@@ -718,17 +733,13 @@ class AdminPlugin(Star):
                             user_id=int(clear_id),
                             reject_add_request=False,
                         )
-                        await event.send(
-                            event.plain_result(
-                                f"已将 {target_name}({clear_id}) 踢出本群。"
-                            )
-                        )
+                        msg_list.append(f"✅ 已将 {target_name}({clear_id}) 踢出本群")
                     except Exception as e:
-                        await event.send(
-                            event.plain_result(
-                                f"踢出 {target_name}({clear_id}) 失败：{e}"
-                            )
-                        )
+                        msg_list.append(f"❌ 踢出 {target_name}({clear_id}) 失败")
+                        logger.error(f"踢出 {target_name}({clear_id}) 失败：{e}")
+
+                if msg_list:
+                    await event.send(event.plain_result("\n".join(msg_list)))
                 controller.stop()
 
         try:
