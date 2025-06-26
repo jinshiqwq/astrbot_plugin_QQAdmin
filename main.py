@@ -2,11 +2,11 @@ import os
 import random
 import textwrap
 from datetime import datetime
-import astrbot.api.message_components as Comp
 from astrbot import logger
 from astrbot.api.event import filter
 from astrbot.api.star import Context, Star, register
 from astrbot.core import AstrBotConfig
+from astrbot.core.message.components import Plain
 from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import (
     AiocqhttpMessageEvent,
 )
@@ -30,7 +30,7 @@ from .core.utils import *
     "astrbot_plugin_QQAdmin",
     "Zhalslar",
     "群管插件，帮助你管理群聊",
-    "3.0.1",
+    "3.0.2",
     "https://github.com/Zhalslar/astrbot_plugin_QQAdmin",
 )
 class AdminPlugin(Star):
@@ -241,7 +241,7 @@ class AdminPlugin(Star):
             await event.bot.set_group_admin(
                 group_id=int(event.get_group_id()), user_id=int(tid), enable=True
             )
-            chain = [Comp.At(qq=tid), Comp.Plain(text="你已被设为管理员")]
+            chain = [At(qq=tid), Plain(text="你已被设为管理员")]
             yield event.chain_result(chain)
 
     @filter.command("取消管理员")
@@ -252,7 +252,7 @@ class AdminPlugin(Star):
             await event.bot.set_group_admin(
                 group_id=int(event.get_group_id()), user_id=int(tid), enable=False
             )
-            chain = [Comp.At(qq=tid), Comp.Plain(text="你的管理员身份已被取消")]
+            chain = [At(qq=tid), Plain(text="你的管理员身份已被取消")]
             yield event.chain_result(chain)
 
     @filter.command("设为精华", alias={"设精"})
@@ -260,7 +260,7 @@ class AdminPlugin(Star):
     async def set_essence_msg(self, event: AiocqhttpMessageEvent):
         """将引用消息添加到群精华"""
         first_seg = event.get_messages()[0]
-        if isinstance(first_seg, Comp.Reply):
+        if isinstance(first_seg, Reply):
             await event.bot.set_essence_msg(message_id=int(first_seg.id))
             yield event.plain_result("已设为精华消息")
             event.stop_event()
@@ -270,7 +270,7 @@ class AdminPlugin(Star):
     async def delete_essence_msg(self, event: AiocqhttpMessageEvent):
         """将引用消息移出群精华"""
         first_seg = event.get_messages()[0]
-        if isinstance(first_seg, Comp.Reply):
+        if isinstance(first_seg, Reply):
             await event.bot.delete_essence_msg(message_id=int(first_seg.id))
             yield event.plain_result("已移除精华消息")
             event.stop_event()
@@ -289,15 +289,40 @@ class AdminPlugin(Star):
     @filter.command("撤回")
     @perm_required(PermLevel.ADMIN)
     async def delete_msg(self, event: AiocqhttpMessageEvent):
-        """撤回 引用的消息 和 发送的消息"""
-        first_seg = event.get_messages()[0]
-        if isinstance(first_seg, Comp.Reply):
+        """(引用消息)撤回 | 撤回 @某人(默认bot) 数量(默认20)"""
+        client = event.bot
+        chain = event.get_messages()
+        first_seg = chain[0]
+        if isinstance(first_seg, Reply):
             try:
-                await event.bot.delete_msg(message_id=int(first_seg.id))
+                await client.delete_msg(message_id=int(first_seg.id))
             except Exception:
                 yield event.plain_result("我无权撤回这条消息")
             finally:
                 event.stop_event()
+        elif any(isinstance(seg, At) for seg in chain):
+            target_ids = get_ats(event) or [event.get_self_id()]
+            end_arg = event.message_str.split()[-1]
+            count = int(end_arg) if end_arg.isdigit() else 10
+            payloads = {
+                "group_id": int(event.get_group_id()),
+                "message_seq": 0,
+                "count": count,
+                "reverseOrder": True, # 倒序, 貌似有问题
+            }
+            result: dict = await client.api.call_action(
+                "get_group_msg_history", **payloads
+            )
+            delete_count = 0
+            for message in reversed(result["messages"]):
+                if str(message["sender"]["user_id"]) in target_ids:
+                    mid = message["message_id"]
+                    try:
+                        await client.delete_msg(message_id=mid)
+                        delete_count += 1
+                    except Exception:
+                        continue
+            yield event.plain_result(f"已从{count}条消息中撤回{delete_count}条")
 
     @filter.event_message_type(EventMessageType.GROUP_MESSAGE)
     async def check_forbidden_words(self, event: AiocqhttpMessageEvent):
@@ -709,7 +734,6 @@ class AdminPlugin(Star):
         yield event.image_result(url)
 
         yield event.chain_result([At(qq=cid) for cid in clear_ids])
-
 
         @session_waiter(timeout=60)  # type: ignore
         async def empty_mention_waiter(
