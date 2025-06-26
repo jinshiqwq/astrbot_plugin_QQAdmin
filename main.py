@@ -1,3 +1,4 @@
+import asyncio
 import os
 import random
 import textwrap
@@ -289,7 +290,7 @@ class AdminPlugin(Star):
     @filter.command("撤回")
     @perm_required(PermLevel.ADMIN)
     async def delete_msg(self, event: AiocqhttpMessageEvent):
-        """(引用消息)撤回 | 撤回 @某人(默认bot) 数量(默认20)"""
+        """(引用消息)撤回 | 撤回 @某人(默认bot) 数量(默认10)"""
         client = event.bot
         chain = event.get_messages()
         first_seg = chain[0]
@@ -302,26 +303,37 @@ class AdminPlugin(Star):
                 event.stop_event()
         elif any(isinstance(seg, At) for seg in chain):
             target_ids = get_ats(event) or [event.get_self_id()]
+            target_ids = {str(uid) for uid in target_ids}
+
             end_arg = event.message_str.split()[-1]
             count = int(end_arg) if end_arg.isdigit() else 10
+
             payloads = {
                 "group_id": int(event.get_group_id()),
                 "message_seq": 0,
                 "count": count,
-                "reverseOrder": True, # 倒序, 貌似有问题
+                "reverseOrder": True,
             }
-            result: dict = await client.api.call_action(
-                "get_group_msg_history", **payloads
-            )
+            result: dict = await client.api.call_action("get_group_msg_history", **payloads)
+
+            messages = list(reversed(result.get("messages", [])))
             delete_count = 0
-            for message in reversed(result["messages"]):
-                if str(message["sender"]["user_id"]) in target_ids:
-                    mid = message["message_id"]
+            sem = asyncio.Semaphore(10)
+            # 撤回消息
+            async def try_delete(message: dict):
+                nonlocal delete_count
+                if str(message["sender"]["user_id"]) not in target_ids:
+                    return
+                async with sem:
                     try:
-                        await client.delete_msg(message_id=mid)
+                        await client.delete_msg(message_id=message["message_id"])
                         delete_count += 1
                     except Exception:
-                        continue
+                        pass
+            # 并发撤回
+            tasks = [try_delete(msg) for msg in messages]
+            await asyncio.gather(*tasks)
+
             yield event.plain_result(f"已从{count}条消息中撤回{delete_count}条")
 
     @filter.event_message_type(EventMessageType.GROUP_MESSAGE)
