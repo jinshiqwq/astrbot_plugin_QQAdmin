@@ -31,7 +31,7 @@ from .core.utils import *
     "astrbot_plugin_QQAdmin",
     "Zhalslar",
     "群管插件，帮助你管理群聊",
-    "3.0.2",
+    "3.0.3",
     "https://github.com/Zhalslar/astrbot_plugin_QQAdmin",
 )
 class AdminPlugin(Star):
