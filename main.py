@@ -3,6 +3,8 @@ import os
 import random
 import textwrap
 from datetime import datetime
+
+from aiocqhttp import CQHttp
 from astrbot import logger
 from astrbot.api.event import filter
 from astrbot.api.star import Context, Star, register
@@ -31,12 +33,13 @@ from .core.utils import *
     "astrbot_plugin_QQAdmin",
     "Zhalslar",
     "群管插件，帮助你管理群聊",
-    "3.0.3",
+    "3.0.4",
     "https://github.com/Zhalslar/astrbot_plugin_QQAdmin",
 )
 class AdminPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
+        self.admins_id: set[str] = set(context.get_config().get("admins_id", []))
         self.config = config
         self._load_config()
         self.curfew_managers: dict[str, CurfewManager] = {}
@@ -57,20 +60,31 @@ class AdminPlugin(Star):
         self.night_end_time: str = night_ban_config.get("night_end_time", "6:00")
 
         forbidden_config = self.config.get("forbidden_config", {})
-        self.forbidden_words: list[str] = (
-            forbidden_config.get("forbidden_words", "").strip().split("，")
-        )
+        raw_words = forbidden_config.get("forbidden_words", "")
+        self.forbidden_words = [
+            word.strip() for word in raw_words.split("，") if word.strip()
+        ]
         self.forbidden_words_group: list[str] = forbidden_config.get(
             "forbidden_words_group", []
         )
         self.forbidden_words_ban_time: int = forbidden_config.get(
             "forbidden_words_ban_time", 60
         )
+        self.enbale_audit: bool = self.config.get("enbale_audit", False)
+        self.admin_audit: bool = self.config.get("admin_audit", False)
+        self.enbale_black: bool = self.config.get("enbale_black", False)
+        self.auto_black: bool = self.config.get("auto_black", False)
+
+        self.level_threshold: int = self.config.get("level_threshold", 50)
         self.perms: dict = self.config.get("perms", {})
 
     async def initialize(self):
         # 初始化权限管理器
-        PermissionManager.get_instance(superusers=self.superusers, perms=self.perms)
+        PermissionManager.get_instance(
+            superusers=self.superusers,
+            perms=self.perms,
+            level_threshold=self.level_threshold,
+        )
         # 初始化进群管理器
         self.plugin_data_dir = StarTools.get_data_dir("astrbot_plugin_QQAdmin")
         group_join_data = os.path.join(self.plugin_data_dir, "group_join_data.json")
@@ -78,6 +92,17 @@ class AdminPlugin(Star):
         # 概率打印LOGO（qwq）
         if random.random() < 0.01:
             print_logo()
+
+    async def _send_admin(self, client: CQHttp, message: str):
+        """向bot管理员发送私聊消息"""
+        for admin_id in self.admins_id:
+            if admin_id.isdigit():
+                try:
+                    await client.send_private_msg(
+                        user_id=int(admin_id), message=message
+                    )
+                except Exception as e:
+                    logger.error(f"无法发送消息给bot管理员：{e}")
 
     @filter.command("禁言")
     @perm_required(PermLevel.ADMIN)
@@ -314,11 +339,14 @@ class AdminPlugin(Star):
                 "count": count,
                 "reverseOrder": True,
             }
-            result: dict = await client.api.call_action("get_group_msg_history", **payloads)
+            result: dict = await client.api.call_action(
+                "get_group_msg_history", **payloads
+            )
 
             messages = list(reversed(result.get("messages", [])))
             delete_count = 0
             sem = asyncio.Semaphore(10)
+
             # 撤回消息
             async def try_delete(message: dict):
                 nonlocal delete_count
@@ -330,6 +358,7 @@ class AdminPlugin(Star):
                         delete_count += 1
                     except Exception:
                         pass
+
             # 并发撤回
             tasks = [try_delete(msg) for msg in messages]
             await asyncio.gather(*tasks)
@@ -600,28 +629,32 @@ class AdminPlugin(Star):
 
         # 进群申请事件
         if (
-            raw.get("post_type") == "request"
+            self.enbale_audit
+            and raw.get("post_type") == "request"
             and raw.get("request_type") == "group"
             and raw.get("sub_type") == "add"
         ):
             user_id = str(raw.get("user_id", ""))
             group_id = str(raw.get("group_id", ""))
-            comment = raw.get("comment") or "无"
+            comment = raw.get("comment")
             flag = raw.get("flag", "")
             nickname = (await client.get_stranger_info(user_id=int(user_id)))[
                 "nickname"
             ] or "未知昵称"
-
-            yield event.plain_result(
-                f"【收到进群申请】同意进群吗：\n昵称：{nickname}\nQQ：{user_id}\nflag：{flag}\n{comment}"
-            )
+            reply = f"【收到进群申请】同意进群吗：\n昵称：{nickname}\nQQ：{user_id}\nflag：{flag}"
+            if comment:
+                reply += f"\n{comment}"
+            if self.admin_audit:
+                await self._send_admin(client, reply)
+            else:
+                yield event.plain_result(reply)
 
             if self.group_join_manager.should_reject(group_id, user_id):
                 await client.set_group_add_request(
                     flag=flag, sub_type="add", approve=False, reason="黑名单用户"
                 )
                 yield event.plain_result("黑名单用户，已自动拒绝进群")
-            elif self.group_join_manager.should_approve(group_id, comment):
+            elif comment and self.group_join_manager.should_approve(group_id, comment):
                 await client.set_group_add_request(
                     flag=flag, sub_type="add", approve=True
                 )
@@ -629,7 +662,8 @@ class AdminPlugin(Star):
 
         # 主动退群事件
         elif (
-            raw.get("post_type") == "notice"
+            self.enbale_black
+            and raw.get("post_type") == "notice"
             and raw.get("notice_type") == "group_decrease"
             and raw.get("sub_type") == "leave"
         ):
@@ -638,10 +672,11 @@ class AdminPlugin(Star):
             nickname = (await client.get_stranger_info(user_id=int(user_id)))[
                 "nickname"
             ] or "未知昵称"
-            if self.group_join_manager.blacklist_on_leave(group_id, user_id):
-                yield event.plain_result(
-                    f"{nickname}({user_id}) 主动退群了，已拉进黑名单"
-                )
+            reply = f"{nickname}({user_id}) 主动退群了"
+            if self.auto_black:
+                self.group_join_manager.blacklist_on_leave(group_id, user_id)
+                reply += "，已拉进黑名单"
+            yield event.plain_result(reply)
 
     @staticmethod
     async def approve(

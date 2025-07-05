@@ -13,30 +13,24 @@ from .utils import get_ats
 class PermLevel(IntEnum):
     """
     定义用户的权限等级。数字越小，权限越高。
-    超管: 0
-    群主: 1
-    管理员: 2
-    成员: 3
-    未知/无权限: 4
     """
 
     SUPERUSER = 0
     OWNER = 1
     ADMIN = 2
-    MEMBER = 3
-    UNKNOWN = 4
+    HIGH = 3
+    MEMBER = 4
+    UNKNOWN = 5
 
     def __str__(self):
-        if self == PermLevel.SUPERUSER:
-            return "超管"
-        elif self == PermLevel.OWNER:
-            return "群主"
-        elif self == PermLevel.ADMIN:
-            return "管理员"
-        elif self == PermLevel.MEMBER:
-            return "成员"
-        else:
-            return "未知/无权限"
+        return {
+            PermLevel.SUPERUSER: "超管",
+            PermLevel.OWNER: "群主",
+            PermLevel.ADMIN: "管理员",
+            PermLevel.HIGH: "高等级成员",
+            PermLevel.MEMBER: "成员",
+            PermLevel.UNKNOWN: "未知/无权限",
+        }.get(self, "未知/无权限")
 
     @classmethod
     def from_str(cls, perm_str: str):
@@ -44,6 +38,7 @@ class PermLevel(IntEnum):
             "超管": cls.SUPERUSER,
             "群主": cls.OWNER,
             "管理员": cls.ADMIN,
+            "高等级成员": cls.HIGH,
             "成员": cls.MEMBER,
             "未知": cls.UNKNOWN,
             "无权限": cls.UNKNOWN,
@@ -65,6 +60,7 @@ class PermissionManager:
         self,
         superusers: Optional[List[str]] = None,
         perms: Optional[Dict[str, str]] = None,
+        level_threshold: int = 10,
     ):
         if self._initialized:
             return
@@ -74,6 +70,7 @@ class PermissionManager:
         self.perms: Dict[str, PermLevel] = {
             k: PermLevel.from_str(v) for k, v in perms.items()
         }
+        self.level_threshold = level_threshold
         self._initialized = True
 
     @classmethod
@@ -81,9 +78,14 @@ class PermissionManager:
         cls,
         superusers: Optional[List[str]] = None,
         perms: Optional[Dict[str, str]] = None,
+        level_threshold: int = 50,
     ) -> "PermissionManager":
         if cls._instance is None:
-            cls._instance = cls(superusers=superusers, perms=perms)
+            cls._instance = cls(
+                superusers=superusers,
+                perms=perms,
+                level_threshold=level_threshold,
+            )
         return cls._instance
 
     async def get_perm_level(
@@ -99,11 +101,18 @@ class PermissionManager:
             group_id=int(group_id), user_id=int(user_id), no_cache=True
         )
         role = info.get("role", "unknown")
-        return {
-            "owner": PermLevel.OWNER,
-            "admin": PermLevel.ADMIN,
-            "member": PermLevel.MEMBER,
-        }.get(role, PermLevel.UNKNOWN)
+        level = int(info.get("level", 0))
+        if role == "owner":
+            return PermLevel.OWNER
+        elif role == "admin":
+            return PermLevel.ADMIN
+        elif role == "member":
+            if level >= self.level_threshold:
+                return PermLevel.HIGH
+            else:
+                return PermLevel.MEMBER
+        else:
+            return PermLevel.UNKNOWN
 
     async def perm_block(
         self,

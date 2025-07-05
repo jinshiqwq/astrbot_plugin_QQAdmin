@@ -6,11 +6,10 @@ import os
 
 
 class GroupJoinData:
-    def __init__(self, path: str = "group_join_data.json"):
+    def __init__(self,path: str = "group_join_data.json"):
         self.path = path
         self.accept_keywords: Dict[str, List[str]] = {}
         self.reject_ids: Dict[str, List[str]] = {}
-        self.auto_black: bool = True
         self._load()
 
     def _load(self):
@@ -22,7 +21,6 @@ class GroupJoinData:
                 data = json.load(f)
             self.accept_keywords = data.get("accept_keywords", {})
             self.reject_ids = data.get("reject_ids", {})
-            self.auto_black = data.get("auto_black", True)
         except Exception as e:
             print(f"加载 group_join_data 失败: {e}")
             self._save()
@@ -31,7 +29,6 @@ class GroupJoinData:
         data = {
             "accept_keywords": self.accept_keywords,
             "reject_ids": self.reject_ids,
-            "auto_black": self.auto_black,
         }
         with open(self.path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
@@ -90,9 +87,7 @@ class GroupJoinManager:
     def get_reject_ids(self, group_id: str) -> List[str]:
         return self.data.reject_ids.get(group_id, [])
 
-    def blacklist_on_leave(self, group_id: str, user_id: str) -> bool:
-        if self.data.auto_black:
-            self.data.reject_ids.setdefault(group_id, []).append(user_id)
-            self.data.save()
-            return True
-        return False
+    def blacklist_on_leave(self, group_id: str, user_id: str) -> None:
+        self.data.reject_ids.setdefault(group_id, []).append(user_id)
+        self.data.save()
+
