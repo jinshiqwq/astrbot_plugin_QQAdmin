@@ -102,17 +102,19 @@ class PermissionManager:
         )
         role = info.get("role", "unknown")
         level = int(info.get("level", 0))
-        if role == "owner":
-            return PermLevel.OWNER
-        elif role == "admin":
-            return PermLevel.ADMIN
-        elif role == "member":
-            if level >= self.level_threshold:
-                return PermLevel.HIGH
-            else:
-                return PermLevel.MEMBER
-        else:
-            return PermLevel.UNKNOWN
+        match role:
+            case "owner":
+                return PermLevel.OWNER
+            case "admin":
+                return PermLevel.ADMIN
+            case "member":
+                return (
+                    PermLevel.HIGH
+                    if level >= self.level_threshold
+                    else PermLevel.MEMBER
+                )
+            case _:
+                return PermLevel.UNKNOWN
 
     async def perm_block(
         self,

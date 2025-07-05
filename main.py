@@ -46,7 +46,6 @@ class AdminPlugin(Star):
 
     def _load_config(self):
         """加载并初始化插件配置"""
-        print(self.config)
         superusers_set = set(self.config.get("superusers", []))
         superusers_set.update(self.context.get_config().get("admins_id", []))
         self.superusers = list(superusers_set)
@@ -70,9 +69,9 @@ class AdminPlugin(Star):
         self.forbidden_words_ban_time: int = forbidden_config.get(
             "forbidden_words_ban_time", 60
         )
-        self.enbale_audit: bool = self.config.get("enbale_audit", False)
+        self.enable_audit: bool = self.config.get("enable_audit", False)
         self.admin_audit: bool = self.config.get("admin_audit", False)
-        self.enbale_black: bool = self.config.get("enbale_black", False)
+        self.enable_black: bool = self.config.get("enable_black", False)
         self.auto_black: bool = self.config.get("auto_black", False)
 
         self.level_threshold: int = self.config.get("level_threshold", 50)
@@ -629,7 +628,7 @@ class AdminPlugin(Star):
 
         # 进群申请事件
         if (
-            self.enbale_audit
+            self.enable_audit
             and raw.get("post_type") == "request"
             and raw.get("request_type") == "group"
             and raw.get("sub_type") == "add"
@@ -662,7 +661,7 @@ class AdminPlugin(Star):
 
         # 主动退群事件
         elif (
-            self.enbale_black
+            self.enable_black
             and raw.get("post_type") == "notice"
             and raw.get("notice_type") == "group_decrease"
             and raw.get("sub_type") == "leave"

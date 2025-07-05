@@ -1,5 +1,5 @@
 {
-  "enbale_audit": {
+  "enable_audit": {
     "description": "启用进群审核",
     "type": "bool",
     "hint": "当用户申请进群时，如果设置了进群关键词bot则会自动审核，没设置也会通知管理员",
@@ -18,7 +18,7 @@
     "invisible": true,
     "default": []
   },
-  "enbale_black": {
+  "enable_black": {
       "description": "启用主动退群通知",
       "type": "bool",
       "hint": "当用户主动退群时，向群内通报",
