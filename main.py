@@ -85,6 +85,12 @@ class AdminPlugin(Star):
             lambda: defaultdict(lambda: deque(maxlen=self.min_count))
         )
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+        self.last_banned_time: dict[str, dict[str, float]] = defaultdict(
+            lambda: defaultdict(float)
+        )
+>>>>>>> Stashed changes
 =======
         self.last_banned_time: dict[str, dict[str, float]] = defaultdict(
             lambda: defaultdict(float)
@@ -438,11 +444,17 @@ class AdminPlugin(Star):
         now = time.time()
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+>>>>>>> Stashed changes
         last_time = self.last_banned_time[group_id][user_id]
         if now - last_time < self.spamming_ban_time:
             return
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
         timestamps = self.msg_timestamps[group_id][user_id]
         timestamps.append(now)
@@ -455,6 +467,11 @@ class AdminPlugin(Star):
                 and self.spamming_ban_time
             ):
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+                # 提前写入禁止标记，防止并发重复禁
+                self.last_banned_time[group_id][user_id] = now
+>>>>>>> Stashed changes
 =======
                 # 提前写入禁止标记，防止并发重复禁
                 self.last_banned_time[group_id][user_id] = now
@@ -466,10 +483,15 @@ class AdminPlugin(Star):
                         duration=self.spamming_ban_time,
                     )
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
                     yield event.plain_result(
                         f"检测到{get_nickname(event, user_id)}刷屏，已禁言"
                     )
+=======
+                    nickname = await get_nickname(event, user_id)
+                    yield event.plain_result(f"检测到{nickname}刷屏，已禁言")
+>>>>>>> Stashed changes
 =======
                     nickname = await get_nickname(event, user_id)
                     yield event.plain_result(f"检测到{nickname}刷屏，已禁言")
