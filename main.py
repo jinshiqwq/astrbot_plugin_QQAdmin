@@ -1,8 +1,10 @@
 import asyncio
+from collections import defaultdict, deque
 import os
 import random
 import textwrap
 from datetime import datetime
+import time
 
 from aiocqhttp import CQHttp
 from astrbot import logger
@@ -33,7 +35,7 @@ from .core.utils import *
     "astrbot_plugin_QQAdmin",
     "Zhalslar",
     "群管插件，帮助你管理群聊",
-    "3.0.4",
+    "3.0.5",
     "https://github.com/Zhalslar/astrbot_plugin_QQAdmin",
 )
 class AdminPlugin(Star):
@@ -60,15 +62,29 @@ class AdminPlugin(Star):
 
         forbidden_config = self.config.get("forbidden_config", {})
         raw_words = forbidden_config.get("forbidden_words", "")
-        self.forbidden_words = [
-            word.strip() for word in raw_words.split("，") if word.strip()
-        ]
+        if isinstance(raw_words, str):
+            self.forbidden_words = [word.strip() for word in raw_words.split("，") if word.strip()]
+        elif isinstance(raw_words, list):
+            self.forbidden_words = [word.strip() for word in raw_words if word.strip()]
+        else:
+            self.forbidden_words = []
         self.forbidden_words_group: list[str] = forbidden_config.get(
             "forbidden_words_group", []
         )
         self.forbidden_words_ban_time: int = forbidden_config.get(
             "forbidden_words_ban_time", 60
         )
+        spamming_config = self.config.get("spamming_config", {})
+        self.min_interval = spamming_config.get("min_interval", 0.5)
+        self.min_count = spamming_config.get("min_count", 4)
+        self.spamming_ban_time = spamming_config.get("spamming_ban_time", 600)
+        self.spamming_group_whitelist = spamming_config.get(
+            "spamming_group_whitelist", []
+        )
+        self.msg_timestamps: dict[str, dict[str, deque[float]]] = defaultdict(
+            lambda: defaultdict(lambda: deque(maxlen=self.min_count))
+        )
+
         self.enable_audit: bool = self.config.get("enable_audit", False)
         self.admin_audit: bool = self.config.get("admin_audit", False)
         self.enable_black: bool = self.config.get("enable_black", False)
@@ -365,6 +381,7 @@ class AdminPlugin(Star):
             yield event.plain_result(f"已从{count}条消息中撤回{delete_count}条")
 
     @filter.event_message_type(EventMessageType.GROUP_MESSAGE)
+    @perm_required(PermLevel.ADMIN)
     async def check_forbidden_words(self, event: AiocqhttpMessageEvent):
         """
         自动检测违禁词，撤回并禁言
@@ -398,6 +415,45 @@ class AdminPlugin(Star):
                     except Exception:
                         pass
                 break
+
+    @filter.event_message_type(filter.EventMessageType.GROUP_MESSAGE)
+    @perm_required(PermLevel.ADMIN)
+    async def spamming_ban(self, event: AiocqhttpMessageEvent):
+        """刷屏检测与禁言"""
+        if self.min_count ==0:
+            return
+        group_id = event.get_group_id()
+        if (
+            self.spamming_group_whitelist
+            and group_id not in self.spamming_group_whitelist
+        ):
+            return
+        user_id = event.get_sender_id()
+        now = time.time()
+
+        timestamps = self.msg_timestamps[group_id][user_id]
+        timestamps.append(now)
+
+        if len(timestamps) >= self.min_count:
+            recent = list(timestamps)[-self.min_count:]
+            intervals = [recent[i + 1] - recent[i] for i in range(self.min_count - 1)]
+            if (
+                all(interval < self.min_interval for interval in intervals)
+                and self.spamming_ban_time
+            ):
+                try:
+                    await event.bot.set_group_ban(
+                        group_id=int(group_id),
+                        user_id=int(user_id),
+                        duration=self.spamming_ban_time,
+                    )
+
+                    yield event.plain_result(
+                        f"检测到{get_nickname(event, user_id)}刷屏，已禁言"
+                    )
+                except Exception as e:
+                    logger.warning(f"刷屏禁言失败：{e}")
+                timestamps.clear()
 
     @filter.command("设置群头像")
     @perm_required(PermLevel.ADMIN)
