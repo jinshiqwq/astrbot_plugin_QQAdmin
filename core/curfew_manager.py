@@ -91,15 +91,9 @@ class CurfewManager:
             while self._active:
                 # 获取当前北京时间 (UTC+8)
                 current_dt = datetime.now(BEIJING_TIMEZONE)
-                current_date = current_dt.date()
-
-                # 创建带日期的起止时间对象（北京时区）
-                start_dt = datetime.combine(current_date, self.start_time).replace(
-                    tzinfo=BEIJING_TIMEZONE
-                )
-                end_dt = datetime.combine(current_date, self.end_time).replace(
-                    tzinfo=BEIJING_TIMEZONE
-                )
+                today = current_dt.date()           # 每次循环都重新取“今天”
+                start_dt = datetime.combine(today, self.start_time).replace(tzinfo=BEIJING_TIMEZONE)
+                end_dt   = datetime.combine(today, self.end_time).replace(tzinfo=BEIJING_TIMEZONE)
 
                 # 处理跨天宵禁逻辑
                 if self.start_time >= self.end_time:
